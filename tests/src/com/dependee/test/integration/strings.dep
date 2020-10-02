@@ -1,0 +1,14 @@
+stringrepeat() <- "a" * 3
+stringrepeat() |= "aaa"
+
+stringsplit() <- "a,b,c,d" / ","
+stringsplit() |= ["a", "b", "c", "d"]
+
+stringsplitchar() <- "abcd" / ""
+stringsplitchar() |= ["a", "b", "c", "d"]
+
+stringarraymerge() <- ["a", "b", "c", "d"] * ","
+stringarraymerge() |= "a,b,c,d"
+
+stringreverse() <- ! "a,b,c,d"
+stringreverse() |= "d,c,b,a"

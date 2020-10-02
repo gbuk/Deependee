@@ -1,0 +1,26 @@
+emptyarray() <- []
+emptyarray() |= []
+
+arrayconcat() <- [1, 2, 3] + [4]
+arrayconcat() |= [1, 2, 3, 4]
+
+arrayremove() <- [1, 2, 3, 4] - [3]
+arrayremove() |= [1, 2, 4]
+
+arrayadd() <- [1, 2, 3] + 1
+arrayadd() |= [2, 3, 4]
+
+arraysub() <- [1, 2, 3] - 1
+arraysub() |= [0, 1, 2]
+
+arraymult() <- [1, 2, 3] * 2
+arraymult() |= [2, 4, 8]
+
+arraydiv() <- [2, 4, 8] / 2
+arraydiv() |= [1, 2, 3]
+
+arrayfindfirst() <- [4, 5, 6] ? 4
+arrayfindfirst() |= 1
+
+arrayfindlast() <- [4, 5, 6] ? 6
+arrayfindlast() |= 3

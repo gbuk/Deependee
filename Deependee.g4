@@ -1,19 +1,24 @@
 grammar Deependee;
 
-expression
+statements : statement (NEWLINE statement)*;
+
+statement
     : dependency
     | constraint
     | COMMENT
     ;
 dependency
-    : leftIdentifier=ID '<-' rightIdentifierValue=value rightIdentifierComment=COMMENT?
-    | leftFunction=function '<-' rightFunctionValue=value rightFunctionComment=COMMENT?
+    : ID '<-' value COMMENT?
+    | ID '<-' external_call COMMENT?
+    | function '<-' value COMMENT?
+    | function '<-' external_call COMMENT?
     ;
 constraint
-    : leftIdentifier=ID '|' rightIdentifierComparator=COMPARATOR rightIdentifierValue=value rightIdentifierComment=COMMENT?
-    | leftFunction=function '|' leftFunctionComparator=COMPARATOR leftFunctionValue=value leftFunctionComment=COMMENT?
+    : ID '|' COMPARATOR value COMMENT?
+    | function '|' COMPARATOR value COMMENT?
     ;
 
+external_call: ID ':' STRING;
 
 object
     :   '{' pair (',' pair)* '}'
@@ -35,12 +40,10 @@ value
     |   function
     |   object
     |   array
-    |   value operation
+    |   value OPERATOR value
     |   'true'
     |   'false'
     ;
-
-operation: OPERATOR value;
 
 ID
     : ([a-z]+|[A-Z]+)+([a-z]+|[A-Z]|[0-9]|[\-_]+)*('.'ID)*
@@ -49,9 +52,12 @@ ID
 OPERATOR
     : '+' // addition, concatenation, boolean or
     | '*' // multiplication, boolean and
-    | '/'
-    | '-'
-    | '!'
+    | '/' // division, string split
+    | '-' // substraction, remove element
+    | '!' // not, inverse
+    | '%' // modulo
+    | '^' // power
+    | '?' // query, index, find, search
     ;
 
 
@@ -77,4 +83,4 @@ fragment EXP :   [Ee] [+\-]? INT ; // \- since - means "range" inside [...]
 
 NEWLINE: [\r][\n] | [\n];
 
-WS : [ \t\r\n]+ -> skip ;
+WS : [ \t\r]+ -> skip ;
