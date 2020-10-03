@@ -5,17 +5,17 @@ import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CodePointCharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 
 public class Deependee {
 
     public static void main(String[] args) {
 
         Deependee dep = new Deependee();
-        dep.interpret("x <- 2");
-        dep.interpret("y <- [x, 3, 4, [2,3]]");
+        dep.interpret("x <- -2.0e3");
+        dep.interpret("y <- [x, 3, y + 4, [2,3], { x : 2 }]");
         dep.interpret("f(x) <- x + \"text\"");
         dep.interpret("t <- u\nv <- w");
+        dep.interpret("x <- { y : z }");
     }
 
     private void interpret(String source) {

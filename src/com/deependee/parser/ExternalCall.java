@@ -1,4 +1,4 @@
 package com.deependee.parser;
 
-public class ExternalCall {
-}
+public record ExternalCall(ID id, String string){}
+

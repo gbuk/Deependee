@@ -27,7 +27,7 @@ object
 pair:   ID ':' value ;
 
 array
-    :   '[' first=value (',' next=value)* ']'
+    :   '[' value (',' value)* ']'
     |   '[' ']' // empty array
     ;
 
@@ -35,12 +35,15 @@ function : ID '(' value*(','value)* ')';
 
 value
     :   STRING
-    |   NUMBER
+    |   number
     |   ID
     |   function
     |   object
     |   array
-    |   value OPERATOR value
+    |   OPERATOR value // unary expression
+    |   value OPERATOR value // binary expression
+    |   value '?' value ':' value // ternary expression
+    |   value COMPARATOR value
     |   'true'
     |   'false'
     ;
@@ -57,7 +60,7 @@ OPERATOR
     | '!' // not, inverse
     | '%' // modulo
     | '^' // power
-    | '?' // query, index, find, search
+    | '??' // query, index, find, search
     ;
 
 
@@ -73,6 +76,7 @@ fragment HEX : [0-9a-fA-F] ;
 
 COMPARATOR : '<' | '<=' | '=' | '=>' | '>';
 
+number : NUMBER;
 NUMBER
     :   '-'? INT '.' [0-9]+ EXP? // 1.35, 1.35E-9, 0.3, -4.5
     |   '-'? INT EXP             // 1e10 -3e4
