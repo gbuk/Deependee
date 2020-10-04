@@ -5,6 +5,7 @@ statements : statement (NEWLINE statement)*;
 statement
     : dependency
     | constraint
+    | NEWLINE //empty statement
     | COMMENT
     ;
 dependency
@@ -39,6 +40,13 @@ value
     |   ID
     |   function
     |   object
+// TODO: implement further syntax
+//    |   object '.' ID
+//    |   object '.' function
+//    |   object '[' STRING ']'
+//    |   object '[' ID ']'
+//    |   array '.' function
+//    |   array '[' INT ']'
     |   array
     |   OPERATOR value // unary expression
     |   value OPERATOR value // binary expression
@@ -46,6 +54,8 @@ value
     |   value COMPARATOR value
     |   'true'
     |   'false'
+// TODO: verify that this is actually working as expected
+    |   '(' value ')'
     ;
 
 ID
@@ -82,7 +92,7 @@ NUMBER
     |   '-'? INT EXP             // 1e10 -3e4
     |   '-'? INT                 // -3, 45
     ;
-fragment INT :   '0' | [1-9] [0-9]* ; // no leading zeros
+INT :   '0' | [1-9] [0-9]* ; // no leading zeros
 fragment EXP :   [Ee] [+\-]? INT ; // \- since - means "range" inside [...]
 
 NEWLINE: [\r][\n] | [\n];

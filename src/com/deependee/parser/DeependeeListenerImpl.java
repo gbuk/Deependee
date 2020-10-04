@@ -1,6 +1,5 @@
 package com.deependee.parser;
 
-import com.deependee.Registry;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -9,24 +8,19 @@ import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class DeependeeListenerImpl extends DeependeeBaseListener {
 
-    Registry registry;
-
-    Map<String, Object> elementsMap = new HashMap<>();
     Stack<Map<String,Object>> elementsStack = new Stack<>();
 
-    public DeependeeListenerImpl(Registry registry) {
-        this.registry = registry;
-    }
+    List<Object> parsingResult = new ArrayList<>();
+    Map<String, Dependency> dependencies = new HashMap<>();
+    Map<String, List<Constraint>> constraints = new HashMap<>();
 
     @Override
     public void exitDependency(DeependeeParser.DependencyContext ctx) {
 
         exit(ctx, childrenMap -> {
-            //System.out.println(read(ctx.children.get(0)) + " " + read(ctx.children.get(1)) + " " + read(ctx.children.get(2)));
             Object leftCtx = ctx.getChild(0);
             Object rightCtx = ctx.getChild(2);
 
@@ -162,9 +156,16 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
     @Override
     public void exitConstraint(DeependeeParser.ConstraintContext ctx) {
         exit(ctx, childrenMap -> {
-            Operator operator = Operator.mapToEnum(read(ctx.getChild(0)));
-            Value operand = mapValue(ctx.getChild(1), childrenMap);
-            return new Constraint(operator, operand);
+            ID id = null;
+            Function func = null;
+            if (ctx.getChild(0) instanceof DeependeeParser.FunctionContext) {
+                func = (Function)childrenMap.get(ctx.getChild(0).getText());
+            } else {
+                id = new ID(ctx.getChild(0).getText());
+            }
+            Operator operator = Operator.mapToEnum(read(ctx.getChild(1)));
+            Value operand = mapValue(ctx.getChild(2), childrenMap);
+            return new Constraint(id, func, operator, operand);
         });
     }
 
@@ -192,7 +193,43 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
 
     @Override
     public void exitStatement(DeependeeParser.StatementContext ctx) {
-        exit(ctx, childrenMap -> null);
+        exit(ctx, childrenMap -> {
+            boolean isDependency = ctx.getChild(0) instanceof DeependeeParser.DependencyContext;
+            boolean isConstraint = ctx.getChild(0) instanceof DeependeeParser.ConstraintContext;
+            if (isDependency || isConstraint) {
+                Object obj = childrenMap.get(ctx.getChild(0).getText());
+                if (isDependency) {
+                    Dependency dep = (Dependency)obj;
+                    if (dep.id() != null) {
+                        dependencies.put(dep.id().toString(), dep);
+                    }
+                    if (dep.function() != null) {
+                        dependencies.put(dep.function().name(), dep);
+                    }
+                }
+                if (isConstraint) {
+                    Constraint constraint = (Constraint)obj;
+                    String key;
+                    if (constraint.id() != null) {
+                        key = constraint.id().text();
+                    } else {
+                        key = constraint.function().name();
+                    }
+                    List<Constraint> constraintsList = constraints.computeIfAbsent(key, k -> new ArrayList<>());
+                    constraintsList.add(constraint);
+                }
+                parsingResult.add(obj);
+            }
+            return null;
+        });
+    }
+
+    public String trace(String dependency) {
+        return dependencies.get(dependency).toString();
+    }
+
+    public String check(String dependency) {
+        return constraints.get(dependency).toString();
     }
 
     @Override
@@ -236,4 +273,9 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
             return "null";
         }
     }
+
+    public List<Object> getParsingResult() {
+        return parsingResult;
+    }
+
 }
