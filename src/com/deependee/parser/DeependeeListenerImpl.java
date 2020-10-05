@@ -163,9 +163,10 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
             } else {
                 id = new ID(ctx.getChild(0).getText());
             }
-            Operator operator = Operator.mapToEnum(read(ctx.getChild(1)));
-            Value operand = mapValue(ctx.getChild(2), childrenMap);
-            return new Constraint(id, func, operator, operand);
+            Operator operator = Operator.mapToEnum(read(ctx.getChild(2)));
+            Value operand = mapValue(ctx.getChild(3), childrenMap);
+            String rationale = (String)childrenMap.get(read(ctx.getChild(4)));
+            return new Constraint(id, func, operator, operand, rationale);
         });
     }
 
@@ -208,6 +209,7 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
                     }
                 }
                 if (isConstraint) {
+                    assert obj instanceof Constraint; // not necessary but IntelliJ complains otherwise
                     Constraint constraint = (Constraint)obj;
                     String key;
                     if (constraint.id() != null) {
@@ -224,6 +226,16 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
         });
     }
 
+    @Override
+    public void exitStatements(DeependeeParser.StatementsContext ctx) {
+        exit(ctx, childrenMap -> null);
+    }
+
+    @Override
+    public void exitRationale(DeependeeParser.RationaleContext ctx) {
+        exit(ctx, childrenMap -> parseString(ctx.getChild(1).getText()));
+    }
+
     public String trace(String dependency) {
         return dependencies.get(dependency).toString();
     }
@@ -233,13 +245,15 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
     }
 
     @Override
-    public void exitStatements(DeependeeParser.StatementsContext ctx) {
-        exit(ctx, childrenMap -> null);
-    }
-
-    @Override
     public void enterEveryRule(ParserRuleContext ctx) {
         enter();
+    }
+
+    private String parseString(String tokenString) {
+        // TODO: parse special characters
+        // TODO: parse unicode
+        // remove quotes around the string
+        return tokenString.substring(1, tokenString.length()-1);
     }
 
     private void enter() {

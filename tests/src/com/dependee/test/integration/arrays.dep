@@ -19,8 +19,11 @@ arraymult() |= [2, 4, 8]
 arraydiv() <- [2, 4, 8] / 2
 arraydiv() |= [1, 2, 3]
 
-arrayfindfirst() <- [4, 5, 6] ? 4
+arrayfindfirst() <- [4, 5, 6] ?? 4
 arrayfindfirst() |= 1
 
-arrayfindlast() <- [4, 5, 6] ? 6
+arrayfindlast() <- [4, 5, 6] ?? 6
 arrayfindlast() |= 3
+
+arrayseek() <- [3, 4, 5, 6] . 2
+arrayseek() |= 4

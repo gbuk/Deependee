@@ -15,9 +15,11 @@ dependency
     | function '<-' external_call COMMENT?
     ;
 constraint
-    : ID '|' COMPARATOR value COMMENT?
-    | function '|' COMPARATOR value COMMENT?
+    : ID '|' COMPARATOR value (rationale)? COMMENT?
+    | function '|' COMPARATOR value (rationale)? COMMENT?
     ;
+
+rationale : '|' STRING;
 
 external_call: ID ':' STRING;
 
@@ -40,13 +42,6 @@ value
     |   ID
     |   function
     |   object
-// TODO: implement further syntax
-//    |   object '.' ID
-//    |   object '.' function
-//    |   object '[' STRING ']'
-//    |   object '[' ID ']'
-//    |   array '.' function
-//    |   array '[' INT ']'
     |   array
     |   OPERATOR value // unary expression
     |   value OPERATOR value // binary expression
@@ -63,13 +58,14 @@ ID
     ;
 
 OPERATOR
-    : '+' // addition, concatenation, boolean or
-    | '*' // multiplication, boolean and
-    | '/' // division, string split
-    | '-' // substraction, remove element
-    | '!' // not, inverse
-    | '%' // modulo
-    | '^' // power
+    : '+'  // addition, concatenation, boolean or
+    | '*'  // multiplication, boolean and
+    | '/'  // division, string split
+    | '-'  // substraction, remove element
+    | '!'  // not, inverse
+    | '%'  // modulo
+    | '^'  // power
+    | '.'  // accessor, call function on object, find at index, find at key
     | '??' // query, index, find, search
     ;
 

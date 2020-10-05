@@ -1,3 +1,3 @@
 package com.deependee.parser;
 
-public record Constraint(ID id, Function function, Operator operator, Value value) {}
+public record Constraint(ID id, Function function, Operator operator, Value value, String rationale) {}
