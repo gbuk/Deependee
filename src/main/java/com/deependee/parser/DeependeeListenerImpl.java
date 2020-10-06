@@ -1,5 +1,7 @@
 package com.deependee.parser;
 
+import com.deependee.generated.antlr.parser.DeependeeBaseListener;
+import com.deependee.generated.antlr.parser.DeependeeParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;

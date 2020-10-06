@@ -1,10 +1,12 @@
 package com.deependee;
 
-import com.deependee.parser.*;
+import com.deependee.generated.antlr.parser.DeependeeLexer;
+import com.deependee.generated.antlr.parser.DeependeeParser;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CodePointCharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
+import com.deependee.parser.DeependeeListenerImpl;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -76,7 +78,7 @@ public class Deependee {
         }
     }
 
-    private List<Object> interpret(String source) {
+    public List<Object> interpret(String source) {
         CodePointCharStream input = CharStreams.fromString(source);
         DeependeeLexer lexer = new DeependeeLexer(input);
         CommonTokenStream tokenStream = new CommonTokenStream(lexer);

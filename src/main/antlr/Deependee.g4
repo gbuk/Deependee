@@ -8,12 +8,14 @@ statement
     | NEWLINE //empty statement
     | COMMENT
     ;
+
 dependency
     : ID '<-' value COMMENT?
     | ID '<-' external_call COMMENT?
     | function '<-' value COMMENT?
     | function '<-' external_call COMMENT?
     ;
+
 constraint
     : ID '|' COMPARATOR value (rationale)? COMMENT?
     | function '|' COMPARATOR value (rationale)? COMMENT?
