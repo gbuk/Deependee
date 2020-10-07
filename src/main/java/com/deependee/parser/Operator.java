@@ -3,7 +3,7 @@ package com.deependee.parser;
 import java.util.HashMap;
 import java.util.Map;
 
-enum Operator {
+public enum Operator {
     PLUS("+"), // addition, concatenation, boolean or
     TIMES("*"), // multiplication, boolean and
     DIVISION("/"), // division, string split

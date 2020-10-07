@@ -16,7 +16,7 @@ import java.util.List;
 
 public class Deependee {
 
-    private static DeependeeListenerImpl listener = new DeependeeListenerImpl();
+    private DeependeeListenerImpl listener = new DeependeeListenerImpl();
 
     private static String LOAD = ":load ";
     private static String TRACE = ":trace ";
@@ -49,12 +49,12 @@ public class Deependee {
                 }
                 if (input.startsWith(TRACE)) {
                     String dependency = input.substring(TRACE.length()).trim();
-                    System.out.println(listener.trace(dependency));
+                    System.out.println(dep.listener.trace(dependency));
                     continue;
                 }
                 if (input.startsWith(CHECK)) {
                     String dependency = input.substring(CHECK.length()).trim();
-                    System.out.println(listener.check(dependency));
+                    System.out.println(dep.listener.check(dependency));
                     continue;
                 }
                 if (input.equals(HELP)) {

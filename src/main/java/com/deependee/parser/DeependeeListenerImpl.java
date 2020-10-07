@@ -22,7 +22,7 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
     @Override
     public void exitDependency(DeependeeParser.DependencyContext ctx) {
 
-        exit(ctx, childrenMap -> {
+        exit(ctx, parsingMap -> {
             Object leftCtx = ctx.getChild(0);
             Object rightCtx = ctx.getChild(2);
 
@@ -33,7 +33,7 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
 
             // dependency is a function definition
             if (leftCtx instanceof DeependeeParser.FunctionContext x_leftCtx) {
-                fun = (Function) childrenMap.get(x_leftCtx.getText());
+                fun = (Function) parsingMap.get(x_leftCtx.getText());
             }
 
             // dependency is an ID
@@ -42,11 +42,11 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
             }
 
             if (rightCtx instanceof DeependeeParser.External_callContext x_rightCtx) {
-                call = (ExternalCall) childrenMap.get(x_rightCtx.getText());
+                call = (ExternalCall) parsingMap.get(x_rightCtx.getText());
             }
 
             if (rightCtx instanceof DeependeeParser.ValueContext x_rightCtx) {
-                val = (Value) childrenMap.get(x_rightCtx.getText());
+                val = (Value) parsingMap.get(x_rightCtx.getText());
             }
 
             return new Dependency(id, fun, val, call);
@@ -55,16 +55,21 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
 
     @Override
     public void exitFunction(DeependeeParser.FunctionContext ctx) {
-        exit(ctx, childrenMap -> {
+        exit(ctx, parsingMap -> {
             String name = ctx.getChild(0).getText();
-            Value[] args = null;
+            Value[] args;
             if (ctx.getChildCount() > 3) {
                 args = new Value[(int) Math.ceil((ctx.getChildCount() - 3) / 2.0)];
                 int j = 0;
-                for (int i = 3; i < ctx.getChildCount() - 2; i++) {
-                    args[j] = (Value) childrenMap.get(ctx.getChild(i).getText());
+                for (int i = 2; i < ctx.getChildCount() - 1; i++) {
+                    if (",".equals(ctx.getChild(i).getText())) {
+                        continue;
+                    }
+                    args[j] = (Value) parsingMap.get(ctx.getChild(i).getText());
                     j++;
                 }
+            } else {
+                args = new Value[0];
             }
             return new Function(name, args);
         });
@@ -72,29 +77,27 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
 
     @Override
     public void exitNumber(DeependeeParser.NumberContext ctx) {
-        exit(ctx, childrenMap -> {
+        exit(ctx, parsingMap -> {
             String valueString = ctx.getChild(0).getText();
-            Object value;
             if (valueString.contains(".")) {
-                value = new BigDecimal(valueString);
+                return new Value(new BigDecimal(valueString));
             } else {
-                value = new BigInteger(valueString);
+                return new Value(new BigInteger(valueString));
             }
-            return new Value(value);
         });
     }
 
     @Override
     public void exitValue(DeependeeParser.ValueContext ctx) {
-        exit(ctx, childrenMap -> {
+        exit(ctx, parsingMap -> {
             // tertiary expression
             if (ctx.getChildCount() >= 5) {
                 Operator operator = Operator.mapToEnum(read(ctx.getChild(1)));
                 if (Operator.LEFT_TERNARY_OPERATOR.equals(operator)) {
-                    Value leftOperand = mapValue(ctx.getChild(0), childrenMap);
-                    Value middleOperand = mapValue(ctx.getChild(0), childrenMap);
+                    Value leftOperand = mapValue(ctx.getChild(0), parsingMap);
+                    Value middleOperand = mapValue(ctx.getChild(0), parsingMap);
                     Operator secondOperator = Operator.mapToEnum(read(ctx.getChild(1)));
-                    Value rightOperand = mapValue(ctx.getChild(2), childrenMap);
+                    Value rightOperand = mapValue(ctx.getChild(2), parsingMap);
                     return new Value(new TernaryExpression(
                         leftOperand,
                         operator,
@@ -108,8 +111,8 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
             if (ctx.getChildCount() >= 3) {
                 Operator operator = Operator.mapToEnum(read(ctx.getChild(1)));
                 if (operator != null) {
-                    Value leftOperand = mapValue(ctx.getChild(0), childrenMap);
-                    Value rightOperand = mapValue(ctx.getChild(2), childrenMap);
+                    Value leftOperand = mapValue(ctx.getChild(0), parsingMap);
+                    Value rightOperand = mapValue(ctx.getChild(2), parsingMap);
                     return new Value(new BinaryExpression(leftOperand, operator, rightOperand));
                 }
             }
@@ -117,39 +120,46 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
             if (ctx.getChildCount() >= 2) {
                 Operator operator = Operator.mapToEnum(read(ctx.getChild(0)));
                 if (operator != null) {
-                    Value operand = mapValue(ctx.getChild(1), childrenMap);
+                    Value operand = mapValue(ctx.getChild(1), parsingMap);
                     return new Value(new UnaryExpression(operator, operand));
                 }
             }
 
+            // the expression is between brackets
+            if ("(".equals(ctx.getChild(0).getText())) {
+                return(mapValue(ctx.getChild(1), parsingMap));
+            }
             // value, child count is 1 or any other case
-            return mapValue(ctx.getChild(0), childrenMap);
+            return mapValue(ctx.getChild(0), parsingMap);
         });
     }
 
-    private Value mapValue(ParseTree ctx, Map<String, Object> childrenMap) {
+    private Value mapValue(ParseTree ctx, Map<String, Object> parsingMap) {
         if (ctx instanceof TerminalNodeImpl) {
             String valueString = read(ctx);
             Object value;
             if (valueString.startsWith("\"")) {
-                value = valueString.substring(1, valueString.length()-2);
+                value = parseString(valueString);
             } else {
                 value = new ID(valueString);
             }
             return new Value(value);
         }
         if (ctx instanceof DeependeeParser.ValueContext) {
-            return (Value)childrenMap.get(read(ctx));
+            return (Value)parsingMap.get(read(ctx));
         }
-        return new Value(childrenMap.get(read(ctx)));
+        if (parsingMap.get(read(ctx)) instanceof Value value) {
+            return value;
+        }
+        return new Value(parsingMap.get(read(ctx)));
     }
 
     @Override
     public void exitArray(DeependeeParser.ArrayContext ctx) {
-        exit(ctx, childrenMap -> new Array(
+        exit(ctx, parsingMap -> new Array(
             ctx.children.stream()
                 .filter(c -> c instanceof DeependeeParser.ValueContext)
-                .map(c -> (Value) childrenMap.get(read(c)))
+                .map(c -> (Value) parsingMap.get(read(c)))
                 .toArray(Value[]::new)
             )
         );
@@ -157,50 +167,50 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
 
     @Override
     public void exitConstraint(DeependeeParser.ConstraintContext ctx) {
-        exit(ctx, childrenMap -> {
+        exit(ctx, parsingMap -> {
             ID id = null;
             Function func = null;
             if (ctx.getChild(0) instanceof DeependeeParser.FunctionContext) {
-                func = (Function)childrenMap.get(ctx.getChild(0).getText());
+                func = (Function)parsingMap.get(ctx.getChild(0).getText());
             } else {
                 id = new ID(ctx.getChild(0).getText());
             }
             Operator operator = Operator.mapToEnum(read(ctx.getChild(2)));
-            Value operand = mapValue(ctx.getChild(3), childrenMap);
-            String rationale = (String)childrenMap.get(read(ctx.getChild(4)));
+            Value operand = mapValue(ctx.getChild(3), parsingMap);
+            String rationale = (String)parsingMap.get(read(ctx.getChild(4)));
             return new Constraint(id, func, operator, operand, rationale);
         });
     }
 
     @Override
     public void exitExternal_call(DeependeeParser.External_callContext ctx) {
-        exit(ctx, childrenMap -> new ExternalCall(new ID(ctx.getChild(0).getText()), ctx.getChild(2).getText()));
+        exit(ctx, parsingMap -> new ExternalCall(new ID(ctx.getChild(0).getText()), ctx.getChild(2).getText()));
     }
 
     @Override
     public void exitObject(DeependeeParser.ObjectContext ctx) {
-        exit(ctx, childrenMap -> new Obj(
+        exit(ctx, parsingMap -> new Obj(
             ctx.children.stream()
-                .map(c -> (Pair) childrenMap.get(read(c)))
+                .map(c -> (Pair) parsingMap.get(read(c)))
                 .toArray(Pair[]::new))
         );
     }
 
     @Override
     public void exitPair(DeependeeParser.PairContext ctx) {
-        exit(ctx, childrenMap -> new Pair(
+        exit(ctx, parsingMap -> new Pair(
             new ID(ctx.getChild(0).getText()),
-            (Value)childrenMap.get(ctx.getChild(2).getText())
+            (Value)parsingMap.get(ctx.getChild(2).getText())
         ));
     }
 
     @Override
     public void exitStatement(DeependeeParser.StatementContext ctx) {
-        exit(ctx, childrenMap -> {
+        exit(ctx, parsingMap -> {
             boolean isDependency = ctx.getChild(0) instanceof DeependeeParser.DependencyContext;
             boolean isConstraint = ctx.getChild(0) instanceof DeependeeParser.ConstraintContext;
             if (isDependency || isConstraint) {
-                Object obj = childrenMap.get(ctx.getChild(0).getText());
+                Object obj = parsingMap.get(ctx.getChild(0).getText());
                 if (isDependency) {
                     Dependency dep = (Dependency)obj;
                     if (dep.id() != null) {
@@ -230,12 +240,12 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
 
     @Override
     public void exitStatements(DeependeeParser.StatementsContext ctx) {
-        exit(ctx, childrenMap -> null);
+        exit(ctx, parsingMap -> null);
     }
 
     @Override
     public void exitRationale(DeependeeParser.RationaleContext ctx) {
-        exit(ctx, childrenMap -> parseString(ctx.getChild(1).getText()));
+        exit(ctx, parsingMap -> parseString(ctx.getChild(1).getText()));
     }
 
     public String trace(String dependency) {
@@ -259,19 +269,24 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
     }
 
     private void enter() {
-        Map<String, Object> childrenMap = new HashMap<>();
-        elementsStack.push(childrenMap);
+        Map<String, Object> parsingMap = new HashMap<>();
+        elementsStack.push(parsingMap);
     }
 
     interface ExitLambda {
-        Object getObject(Map<String, Object> childrenMap);
+        Object getObject(Map<String, Object> parsingMap);
     }
 
     public void exit(Object ctx, ExitLambda exit) {
-        if (elementsStack.empty())
+        if (elementsStack.empty()) {
+            // this case should never happen
+            // but we are guarding against exception on pop()
             return;
-        Map<String, Object> childrenMap = elementsStack.pop();
-        Object parseResult = exit.getObject(childrenMap);
+        }
+        Map<String, Object> parsingMap = elementsStack.pop();
+        // copy the elements from the parents
+        elementsStack.forEach(parsingMap::putAll);
+        Object parseResult = exit.getObject(parsingMap);
         //TODO: find out what to do with the parse result if it's the top element of the hierarchy
         if (!elementsStack.empty()) {
             elementsStack.peek().put(read(ctx), parseResult);
