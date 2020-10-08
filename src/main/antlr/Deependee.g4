@@ -29,7 +29,7 @@ object
     :   '{' pair (',' pair)* '}'
     |   '{' '}' // empty object
     ;
-pair:   ID ':' value ;
+pair:   (STRING | ID | function) ':' value ;
 
 array
     :   '[' value (',' value)* ']'
@@ -45,41 +45,44 @@ value
     |   function
     |   object
     |   array
-    |   OPERATOR value // unary expression
+    |   UNARY_OPERATOR value // unary expression
     |   value OPERATOR value // binary expression
     |   value '?' value ':' value // ternary expression
     |   value COMPARATOR value
+    |   (STRING | ID | function | object | array) (ACCESSOR (STRING | ID | function))+
     |   'true'
     |   'false'
-// TODO: verify that this is actually working as expected
     |   '(' value ')'
     ;
 
-ID
-    : ([a-z]+|[A-Z]+)+([a-z]+|[A-Z]|[0-9]|[\-_]+)*('.'ID)*
-    ;
+ID : ([a-z]+|[A-Z]+)+([a-z]|[A-Z]|[0-9]|[\-_])*;
 
 OPERATOR
     : '+'  // addition, concatenation, boolean or
     | '*'  // multiplication, boolean and
     | '/'  // division, string split
     | '-'  // substraction, remove element
-    | '!'  // not, inverse
     | '%'  // modulo
     | '^'  // power
-    | '.'  // accessor, call function on object, find at index, find at key
     | '??' // query, index, find, search
     ;
 
+UNARY_OPERATOR
+    : '!' // not, inverse
+;
 
-STRING :  '"' (ESC | ~["\\])* '"' ;
+ACCESSOR
+    : '.'  // accessor, call function on object, find at index, find at key
+;
+
+STRING :  '"' (ESC | ~["\\/])* '"' ;
 COMMENT
     : '//' [.]*
     | '/*' [.]* '*/'
     ;
 
-fragment ESC :   '\\' (["\\/bfnrt] | UNICODE) ;
-fragment UNICODE : 'u' HEX HEX HEX HEX ;
+fragment ESC :   '\\' (["\\bfnrt] | UNICODE) ;
+fragment UNICODE : 'u' HEX HEX HEX HEX HEX? ;
 fragment HEX : [0-9a-fA-F] ;
 
 COMPARATOR : '<' | '<=' | '=' | '=>' | '>';

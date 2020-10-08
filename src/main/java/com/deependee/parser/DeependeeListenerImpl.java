@@ -95,9 +95,9 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
                 Operator operator = Operator.mapToEnum(read(ctx.getChild(1)));
                 if (Operator.LEFT_TERNARY_OPERATOR.equals(operator)) {
                     Value leftOperand = mapValue(ctx.getChild(0), parsingMap);
-                    Value middleOperand = mapValue(ctx.getChild(0), parsingMap);
-                    Operator secondOperator = Operator.mapToEnum(read(ctx.getChild(1)));
-                    Value rightOperand = mapValue(ctx.getChild(2), parsingMap);
+                    Value middleOperand = mapValue(ctx.getChild(2), parsingMap);
+                    Operator secondOperator = Operator.mapToEnum(read(ctx.getChild(3)));
+                    Value rightOperand = mapValue(ctx.getChild(4), parsingMap);
                     return new Value(new TernaryExpression(
                         leftOperand,
                         operator,
@@ -138,8 +138,10 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
         if (ctx instanceof TerminalNodeImpl) {
             String valueString = read(ctx);
             Object value;
-            if (valueString.startsWith("\"")) {
+            if (isString(valueString)) {
                 value = parseString(valueString);
+            } else if (isBoolean(valueString)) {
+                value = Boolean.parseBoolean(valueString);
             } else {
                 value = new ID(valueString);
             }
@@ -152,6 +154,14 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
             return value;
         }
         return new Value(parsingMap.get(read(ctx)));
+    }
+
+    private boolean isString(String value) {
+        return value.startsWith("\"");
+    }
+
+    private boolean isBoolean(String value) {
+        return "true".equals(value) || "false".equals(value);
     }
 
     @Override
@@ -191,17 +201,42 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
     public void exitObject(DeependeeParser.ObjectContext ctx) {
         exit(ctx, parsingMap -> new Obj(
             ctx.children.stream()
+                .filter(c -> notIn(c.getText(), "{", "}", ","))
                 .map(c -> (Pair) parsingMap.get(read(c)))
                 .toArray(Pair[]::new))
         );
     }
 
+    private boolean notIn(String str, String... strs) {
+        for(String s : strs) {
+            if (s.equals(str))
+                return false;
+        }
+        return true;
+    }
+
     @Override
     public void exitPair(DeependeeParser.PairContext ctx) {
-        exit(ctx, parsingMap -> new Pair(
-            new ID(ctx.getChild(0).getText()),
-            (Value)parsingMap.get(ctx.getChild(2).getText())
-        ));
+        exit(ctx, parsingMap -> {
+            Object key;
+            KeyType keyType;
+            String keyString = ctx.getChild(0).getText();
+            if (isString(keyString)) {
+                key = parseString(keyString);
+                keyType = KeyType.STRING;
+            } else if (parsingMap.get(keyString) != null) {
+                key = parsingMap.get(keyString);
+                keyType = KeyType.FUNCTION;
+            } else {
+                key = new ID(keyString);
+                keyType = KeyType.ID;
+            }
+            return new Pair(
+                    key,
+                    keyType,
+                    (Value)parsingMap.get(ctx.getChild(2).getText())
+            );
+        });
     }
 
     @Override
@@ -262,10 +297,44 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
     }
 
     private String parseString(String tokenString) {
-        // TODO: parse special characters
-        // TODO: parse unicode
         // remove quotes around the string
-        return tokenString.substring(1, tokenString.length()-1);
+        String content = tokenString.substring(1, tokenString.length()-1);
+        StringBuilder s = new StringBuilder();
+        int i=0;
+        while(i < content.length()) {
+            char character = content.charAt(i);
+            if (character == '\\') {
+                i++;
+                character = content.charAt(i);
+                if (character == 'u') {
+                    //TODO: handle emojis
+                    // parse unicode
+                    String unicodeHex = ""
+                        + content.charAt(i+1)
+                        + content.charAt(i+2)
+                        + content.charAt(i+3)
+                        + content.charAt(i+4);
+                    char unicodeValue = (char)Integer.parseInt(unicodeHex, 16);
+                    s.append(unicodeValue);
+                    i+=4;
+                } else if (character == '\\') {
+                    s.append('\\');
+                } else {
+                    // parse special characters
+                    switch (character) {
+                        case 'b' -> s.append('\b');
+                        case 'f' -> s.append('\f');
+                        case 'n' -> s.append('\n');
+                        case 'r' -> s.append('\r');
+                        case 't' -> s.append('\t');
+                    }
+                }
+            } else {
+                s.append(character);
+            }
+            i++;
+        }
+        return s.toString();
     }
 
     private void enter() {

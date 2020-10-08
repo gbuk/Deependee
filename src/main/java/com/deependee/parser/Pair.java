@@ -1,3 +1,3 @@
 package com.deependee.parser;
 
-public record Pair(ID key, Value value) {}
+public record Pair(Object key, KeyType keyType, Value value) {}

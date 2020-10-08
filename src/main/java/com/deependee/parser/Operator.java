@@ -19,6 +19,7 @@ public enum Operator {
     GREATER_THAN(">"),
     LEFT_TERNARY_OPERATOR("?"),
     RIGHT_TERNARY_OPERATOR(":"),
+    ACCESSOR("."),
     ;
 
     private String text;
