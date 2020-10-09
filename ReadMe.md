@@ -2,9 +2,14 @@
 
 ##Language philosophy
 - everything is a dependency
-- fields depend on computations
-- functions depend on implementation
-- dependencies can be existing or latent 
+  - fields depend on computations
+  - functions depend on implementation
+  - dependency graphs (traces) are always visible
+- dependencies can be existing or latent
+- arrays and objects are streamed by default
+- no invalid states
+  - no null values
+  - no exceptions
 
 ##Platform philosophy
 - cloud-ready
@@ -12,6 +17,19 @@
 - no logging
 - observable
 - versioned
+
+##Environment philosophy
+- data storage is cheap
+- networks are fast but
+  - need to consider geolocation
+  - network distribution needs to be obvious
+- machines can make better decisions
+  - heuristics, coded best practices, algorithms
+  - machine learning
+- small compute is cheap and ubiquitous
+  - high threading counts
+  - lambdas
+  - on demand compute
 
 ##Testing
 - when a constraint is defined before assigning a dependency, the assignment is checked against the constraint
