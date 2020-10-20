@@ -17,6 +17,7 @@
 - no logging
 - observable
 - versioned
+- automated input validation
 
 ##Environment philosophy
 - data storage is cheap
