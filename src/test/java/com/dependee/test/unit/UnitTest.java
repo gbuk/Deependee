@@ -1,6 +1,6 @@
 package com.dependee.test.unit;
 
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -13,7 +13,7 @@ public class UnitTest {
     }
 
     protected <T> T assertNotNull(T value) {
-        Assert.assertNotNull(value);
+        Assertions.assertNotNull(value);
         return value;
     }
 }
