@@ -1,0 +1,6 @@
+add(x,y) <- x + y
+add(1,2) |= 3
+
+curry(y) <- add(1,y)
+curry(y) |= function(y) <- 1 + y
+curry(3) |= 4

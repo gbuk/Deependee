@@ -1,7 +1,7 @@
 package com.dependee.test.unit.parsing;
 
-import com.deependee.Deependee;
 import com.deependee.parser.Constraint;
+import com.deependee.parser.DeependeeParser;
 import com.deependee.parser.Function;
 import com.deependee.parser.Operator;
 import com.dependee.test.unit.UnitTest;
@@ -39,8 +39,8 @@ public class ConstraintParsingTest extends UnitTest {
     }
 
     private Constraint parseIDConstraint(String text) {
-        Deependee deependee = new Deependee();
-        List<Object> res = deependee.interpret(text);
+        DeependeeParser parser = new DeependeeParser();
+        List<Object> res = parser.parse(text);
         assertNotNull(res);
         assertEquals(1, res.size());
         Constraint c = assertIsClass(Constraint.class, res.get(0));

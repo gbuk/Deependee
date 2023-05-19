@@ -1,6 +1,5 @@
 package com.dependee.test.unit.parsing;
 
-import com.deependee.Deependee;
 import com.deependee.parser.*;
 import org.junit.jupiter.api.Test;
 
@@ -293,8 +292,8 @@ public class SingleDependencyParsingTest extends com.dependee.test.unit.UnitTest
     }
 
     private Dependency parseIDValueDependency(String text) {
-        Deependee deependee = new Deependee();
-        List<Object> res = deependee.interpret(text);
+        DeependeeParser parser = new DeependeeParser();
+        List<Object> res = parser.parse(text);
         assertNotNull(res);
         assertEquals(1, res.size());
         Dependency dep = assertIsClass(Dependency.class, res.get(0));

@@ -1,11 +1,10 @@
 grammar Deependee;
 
-statements : statement (NEWLINE statement)*;
+statements : statement (NEWLINE+ statement)* EOF?;
 
 statement
     : dependency
     | constraint
-    | NEWLINE //empty statement
     | COMMENT
     ;
 
@@ -26,14 +25,15 @@ rationale : '|' STRING;
 external_call: ID ':' STRING;
 
 object
-    :   '{' pair (',' pair)* '}'
-    |   '{' '}' // empty object
+    :   '{' NEWLINE* pair ( NEWLINE* ',' NEWLINE* pair)* NEWLINE* '}'
+    |   '{' NEWLINE* '}' // empty object
     ;
 pair:   (STRING | ID | function) ':' value ;
 
 array
-    :   '[' value (',' value)* ']'
-    |   '[' ']' // empty array
+    :   '[' NEWLINE* value ( NEWLINE* ',' NEWLINE* value)* NEWLINE* ']'
+    |   '[' NEWLINE* ']' // empty array
+    |   '[' NEWLINE* range NEWLINE* ']'
     ;
 
 function : ID '(' value*(','value)* ')';
@@ -49,11 +49,13 @@ value
     |   value OPERATOR value // binary expression
     |   value '?' value ':' value // ternary expression
     |   value COMPARATOR value
-    |   (STRING | ID | function | object | array) (ACCESSOR (STRING | ID | function))+
+    |   (STRING | ID | function | object | array) (ACCESSOR (NONZERO | STRING | ID | function))+
     |   'true'
     |   'false'
     |   '(' value ')'
     ;
+
+range: value '..' value;
 
 ID : ([a-z]+|[A-Z]+)+([a-z]|[A-Z]|[0-9]|[\-_])*;
 
@@ -90,12 +92,13 @@ COMPARATOR : '<' | '<=' | '=' | '=>' | '>';
 number : NUMBER;
 NUMBER
     :   '-'? INT '.' [0-9]+ EXP? // 1.35, 1.35E-9, 0.3, -4.5
-    |   '-'? INT EXP             // 1e10 -3e4
+    |   '-'? INT EXP             // 1e-10 -3e+4
     |   '-'? INT                 // -3, 45
     ;
-INT :   '0' | [1-9] [0-9]* ; // no leading zeros
-fragment EXP :   [Ee] [+\-]? INT ; // \- since - means "range" inside [...]
+NONZERO : [1-9];
+INT :   '0' | NONZERO INT* ; // no leading zeros
+fragment EXP :   ([Ee][+\-]) INT ;
 
 NEWLINE: [\r][\n] | [\n];
 
-WS : [ \t\r]+ -> skip ;
+WS : [ \t]+ -> skip ;

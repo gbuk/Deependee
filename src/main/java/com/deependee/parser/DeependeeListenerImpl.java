@@ -21,7 +21,7 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
 
     @Override
     public void exitDependency(DeependeeParser.DependencyContext ctx) {
-
+        System.out.println("<-dep: " + ctx.getText());
         exit(ctx, parsingMap -> {
             Object leftCtx = ctx.getChild(0);
             Object rightCtx = ctx.getChild(2);
@@ -54,6 +54,15 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
     }
 
     @Override
+    public void enterStatement(DeependeeParser.StatementContext ctx) {
+        System.out.println("->statement:");
+    }
+    @Override
+    public void enterStatements(DeependeeParser.StatementsContext ctx) {
+        System.out.println("->statements:");
+    }
+
+    @Override
     public void exitFunction(DeependeeParser.FunctionContext ctx) {
         exit(ctx, parsingMap -> {
             String name = ctx.getChild(0).getText();
@@ -79,8 +88,15 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
     public void exitNumber(DeependeeParser.NumberContext ctx) {
         exit(ctx, parsingMap -> {
             String valueString = ctx.getChild(0).getText();
-            if (valueString.contains(".")) {
-                return new Value(new BigDecimal(valueString));
+            boolean decimal = valueString.toLowerCase().contains("e-") || valueString.contains(".");
+            boolean intSciNotation = valueString.toLowerCase().contains("e+");
+            if (decimal || intSciNotation) {
+                BigDecimal bd = new BigDecimal(valueString);
+                if (intSciNotation) {
+                    return new Value(bd.toBigInteger());
+                } else {
+                    return new Value(bd);
+                }
             } else {
                 return new Value(new BigInteger(valueString));
             }
@@ -193,6 +209,12 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
     }
 
     @Override
+    public void exitRange(DeependeeParser.RangeContext ctx) {
+        exit(ctx, parsingMap -> new Range(new Value(ctx.getChild(0).getText()), new Value(ctx.getChild(2).getText())));
+    }
+
+
+    @Override
     public void exitExternal_call(DeependeeParser.External_callContext ctx) {
         exit(ctx, parsingMap -> new ExternalCall(new ID(ctx.getChild(0).getText()), ctx.getChild(2).getText()));
     }
@@ -203,6 +225,7 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
             ctx.children.stream()
                 .filter(c -> notIn(c.getText(), "{", "}", ","))
                 .map(c -> (Pair) parsingMap.get(read(c)))
+                .filter(p -> p != null && p.key() != null)
                 .toArray(Pair[]::new))
         );
     }
@@ -241,6 +264,8 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
 
     @Override
     public void exitStatement(DeependeeParser.StatementContext ctx) {
+        System.out.println("<-statement: " + ctx.getText());
+
         exit(ctx, parsingMap -> {
             boolean isDependency = ctx.getChild(0) instanceof DeependeeParser.DependencyContext;
             boolean isConstraint = ctx.getChild(0) instanceof DeependeeParser.ConstraintContext;
@@ -275,7 +300,15 @@ public class DeependeeListenerImpl extends DeependeeBaseListener {
 
     @Override
     public void exitStatements(DeependeeParser.StatementsContext ctx) {
-        exit(ctx, parsingMap -> null);
+        System.out.println("<-statements: " + ctx.getText());
+        exit(ctx, parsingMap -> {
+            for(Map<String, Object> element : elementsStack) {
+                for (String key : element.keySet()) {
+                    System.out.println(key + " -> " + element.get(key));
+                }
+            }
+            return null;
+        });
     }
 
     @Override

@@ -27,3 +27,6 @@ arrayfindlast() |= 3
 
 arrayseek() <- [3, 4, 5, 6] . 2
 arrayseek() |= 4
+
+arrayrange() <- [2..6]
+arrayrange() |= [2, 3, 4, 5, 6]
