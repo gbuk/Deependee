@@ -1,0 +1,41 @@
+plugins {
+    id 'java'
+}
+
+group 'com.deependee.server'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+sourceSets {
+    main {
+        java {
+            srcDirs = [
+                'src/main/java',
+                'build/generated-src/antlr/main'
+            ]
+        }
+    }
+    test {
+        java {
+            srcDirs = ['src/test/java']
+        }
+    }
+}
+
+project.buildDir = "${rootDir}/../build"
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += '--enable-preview'
+}
+
+dependencies {
+    implementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+    implementation project(':deependee-core')
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+}
+
+test {
+    useJUnitPlatform()
+}

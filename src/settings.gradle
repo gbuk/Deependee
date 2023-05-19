@@ -1,0 +1,5 @@
+rootProject.name = 'Deependee'
+include 'deependee-core'
+include 'deependee-repl-console'
+include 'deependee-repl-web'
+include 'deependee-server'

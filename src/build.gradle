@@ -1,0 +1,9 @@
+plugins {
+    id 'java'
+}
+
+java {
+    sourceCompatibility = 17
+}
+
+project.buildDir = "${rootDir}/../build"

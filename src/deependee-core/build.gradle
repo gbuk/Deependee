@@ -1,0 +1,61 @@
+plugins {
+    id 'java'
+    id 'antlr'
+}
+
+group 'com.deependee'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+buildDir = "${rootDir}/../build"
+
+sourceSets {
+    main {
+        java {
+            srcDirs = [
+                'main/java',
+                "${buildDir}/generated-src"
+            ]
+        }
+        antlr {
+            srcDirs = [ 'main/antlr' ]
+        }
+    }
+    test {
+        java {
+            srcDirs = ['test/java']
+        }
+    }
+}
+
+
+generateGrammarSource {
+    outputDirectory = new File("${buildDir}/generated-src/com/deependee/generated/antlr/parser")
+    arguments += ["-package", "com.deependee.generated.antlr.parser"]
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += '--enable-preview'
+}
+tasks.withType(Test) {
+    jvmArgs += "--enable-preview"
+}
+
+dependencies {
+    implementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+    antlr('org.antlr:antlr4:4.11.1') {
+        exclude group:'com.ibm.icu', module:'icu4j'
+    }
+    implementation 'org.antlr:antlr4-intellij-adaptor:0.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+}
+
+compileTestJava.dependsOn compileJava
+
+test {
+    dependsOn compileJava
+    useJUnitPlatform()
+}

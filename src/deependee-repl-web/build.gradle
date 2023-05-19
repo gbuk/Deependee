@@ -1,0 +1,12 @@
+plugins {
+    id "com.palawanframe.angular-base" version "0.3.2"
+}
+
+group 'com.deependee.repl.web'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+project.buildDir = "${rootDir}/../build"
